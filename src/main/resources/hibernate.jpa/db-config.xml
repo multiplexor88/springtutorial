@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:util="http://www.springframework.org/schema/util" xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd   http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <context:annotation-config/>
+    <context:component-scan base-package="hibernate.jpa"/>
+
+    <tx:annotation-driven/>
+
+    <context:property-placeholder location="classpath:hibernate.jpa/dataSource.properties"/>
+
+    <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="emf"/>
+    </bean>
+
+    <bean id="emf" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="packagesToScan" value="hibernate.jpa"/>
+        <property name="jpaVendorAdapter">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter"/>
+        </property>
+        <property name="jpaProperties" ref="hibernateProperties"/>
+    </bean>
+
+    <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="${database.driver}"/>
+        <property name="url" value="${database.url}"/>
+        <property name="username" value="${database.username}"/>
+        <property name="password" value="${database.password}"/>
+    </bean>
+
+    <util:properties id="hibernateProperties">
+        <!--<prop key="hibernate.show_sql">true</prop>-->
+        <!--<prop key="#{T(org.hibernate.cfg.AvailableSettings).FORMAT_SQL}">${hibernate.format_sql}</prop>-->
+        <!--<prop key="#{T(org.hibernate.cfg.AvailableSettings).USE_SQL_COMMENTS}">${hibernate.use_sql_comments}</prop>-->
+
+        <prop key="#{T(org.hibernate.cfg.AvailableSettings).ENABLE_LAZY_LOAD_NO_TRANS}">true</prop>
+        <prop key="#{T(org.hibernate.cfg.AvailableSettings).SHOW_SQL}">true</prop>
+        <!--<prop key="#{T(org.hibernate.cfg.AvailableSettings).CACHE_REGION_FACTORY}">org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory</prop>-->
+        <!--<prop key="#{T(org.hibernate.cfg.AvailableSettings).USE_SECOND_LEVEL_CACHE}">false</prop>-->
+        <!--<prop key="#{T(org.hibernate.cfg.AvailableSettings).USE_QUERY_CACHE}">false</prop>-->
+    </util:properties>
+</beans>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="standardTarget" class="spring.core.method_replacement.StandardTarget"/>
+    <bean id="replacementTarget" class="spring.core.method_replacement.StandardTarget">
+        <replaced-method name="someOperation" replacer="replacer">
+            <arg-type>String</arg-type>
+        </replaced-method>
+    </bean>
+    <bean id="replacer" class="spring.core.method_replacement.FromatMethoodReplacement"/>
+</beans>

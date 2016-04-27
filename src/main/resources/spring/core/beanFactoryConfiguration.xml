@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:c="http://www.springframework.org/schema/c"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:component-scan base-package="spring.core">
+        <context:exclude-filter type="assignable" expression="spring.core.SimpleBean"/>
+    </context:component-scan>
+
+    <bean id="simpleBean" name="simpleBeanName" class="spring.core.SimpleBean">
+        <property name="name"  value="I am a simple bean"/>
+    </bean>
+
+    <bean id="setterDIBean" class="spring.core.SetterDIBean"
+        p:simpleBean-ref="simpleBean"/>
+    <bean id="ConstructorDIBean" class="spring.core.ConstructorDIBean"
+          c:simpleBean-ref="simpleBean"/>
+    <bean id="constructorDIBeanWithMessage" class="spring.core.ConstructorDIBeanWithMessage"
+          c:_0="I am ConstructorDIBeanWithMessage"/>
+    <bean id="constructorDIBeanWith2Messages" class="spring.core.ConstructorDIBeanWithMessage"
+          c:_0="message 1"
+          c:_1="message 2"/>
+
+    <bean id="collectionsInjectBean" class="spring.core.CollectionsInject">
+        <property name="myList">
+            <list>
+                <value>from list 1</value>
+                <value>from list 2</value>
+            </list>
+        </property>
+        <property name="myMap">
+            <map>
+                <entry key="key_0">
+                    <value>val_0</value>
+                </entry>
+            </map>
+        </property>
+        <property name="myProps">
+            <props>
+                <prop key="prop_key_0">prop_val_0</prop>
+                <prop key="prop_key_01">prop_val_1</prop>
+            </props>
+        </property>
+        <property name="mySet">
+            <set>
+                <value>set_val_0</value>
+                <ref bean="simpleBean"/>
+            </set>
+        </property>
+    </bean>
+</beans>

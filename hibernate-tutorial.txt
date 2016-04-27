@@ -1,0 +1,236 @@
+Dependencies:
+	<groupId>org.hibernate</groupId>
+	<artifactId>hibernate-entitymanager</artifactId>
+
+	<groupId>org.springframework.data</groupId>
+	<artifactId>spring-data-jpa</artifactId>
+
+Hibernate Configuration in Spring (put configuration inside applicationContext):
+
+allow annotations:
+    <tx:annotation-driven/>	
+	
+allow reading data from properties file:
+	<context:property-placeholder location="classpath:hibernate.core/dataSource.properties"/>
+
+Configure datasource:
+	<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="${database.driver}"/>
+        <property name="url" value="${database.url}"/>
+        <property name="username" value="${database.username}"/>
+        <property name="password" value="${database.password}"/>
+    </bean>
+
+Configure properties for SessionFactory:
+	<util:properties id="hibernateProperties">
+        <prop key="hibernate.show_sql">true</prop>
+    </util:properties>
+
+Set SessionFactory:
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="packagesToScan" value="hibernate.core"/>
+        <property name="hibernateProperties" ref="hibernateProperties"/>
+    </bean>
+	
+Set TransactionManager:
+	<bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory"/>
+    </bean>
+
+Annotations:
+	class
+		@Entity
+		@Table
+	field(method, better - get-methods)
+		@Column
+		@Temporal(TemporalType.DATE)		under date, then java can map util.date to sql.date
+		@Id									primary key
+		@GeneratedValue						how primary key is generated (GeneratedValue.IDENTITY, ...)
+		@Version
+
+Associations:
+	OneToMany:
+		tableA
+			a_id
+		tableB 
+			FK b_id references tableA(a_id)
+			
+		class A
+			@OneToMany(mappedBy="tableA")
+			B[]
+		
+		class B
+			@ManyToOne
+			@JoinColumn(name="b_id")
+			A
+	
+	ManyToMany
+		tableA	
+			a_id
+		tableB
+			b_id
+		joinTable
+			c_a_id
+			c_b_id
+			FK references tableA(a_id)
+			FK references tableB(b_id)
+	
+		class A
+			@ManyToMany
+			@JoinTable(name = "joinTable", joinColumns = @JoinColumn(name = "c_a_id"),
+			inverseJoinColumns = @JoinColumn(name = "c_b_id"))
+			B[]
+		class B
+			@ManyToMany
+			@JoinTable(name = "joinTable", joinColumns = @JoinColumn(name = "c_b_id"),
+			inverseJoinColumns = @JoinColumn(name = "c_a_id"))
+			A[]
+			
+Work with SessionFactory:
+	ApplicationContext ctx = new ClassPathXmlApplicationContext("classpath:hibernate.core/db-config.xml");
+	SessionFactory sessionFactory = (SessionFactory) ctx.getBean("sessionFactory");
+	Session session = sessionFactory.openSession();
+	session.getTransaction().begin();
+	//create data 
+	session.save(/*data*/)
+	session.getTransaction().commit();
+	session.close();
+	
+	(or sessionFactory.getCurrentSession().createQuery("HQL_QUERY"))
+
+LazyInitialization problem:
+	При попытке доступа к ассоциации инфраструктура Hibernate генерирует исклю­
+	чение LazyinitializationException. Причина в том, что по умолчанию Hibernate
+	выбирает ассоциацию отложенным ("ленивым") образом
+	Solution:
+		1. @ManyToMany(fetch = FetchType.EAGER) //slow!!!
+		2. (see line 30) add property: 
+			<prop key="#{T(org.hibernate.cfg.AvailableSettings).ENABLE_LAZY_LOAD_NO_TRANS}">true</prop>
+		3. Use NamedQuery:
+			under class add annotation:
+				@NamedQueries({
+						@NamedQuery(name = "Contact.findAllWithDetail",
+						query = "select distinct c from Contact c left join fetch c.contactTelDetails t " +
+								"left join fetch c.hobbies h")
+				})
+				{eft join fetch} means extract data with eager fetching
+			sessionFactory.getCurrentSession().getNamedQuery("Contact.findAllWithDetail").list()
+			
+NamedQuery with parameters:
+	@NamedQuery(name = "Contact.findById",
+                query = "select distinct c from Contact c left join fetch c.contactTelDetails t " +
+                        "left join fetch c.hobbies h where c.id = :id")
+	sessionFactory.getCurrentSession().getNamedQuery(
+                "Contact.findById"
+        ).setParameter("id", id).uniqueResult();
+		
+
+		
+		
+		
+		
+		
+Persistence with JPA
+Dependencies:
+	<groupId>org.hibernate.javax.persistence</groupId>
+    <artifactId>hibernate-jpa-2.0-api</artifactId>
+	
+	<groupId>org.hibernate</groupId>
+    <artifactId>hibernate-entitymanager</artifactId>
+Configuration:
+	1.DataSource:
+		    <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+				<property name="driverClassName" value="${database.driver}"/>
+				<property name="url" value="${database.url}"/>
+				<property name="username" value="${database.username}"/>
+				<property name="password" value="${database.password}"/>
+			</bean>
+	2.Property list for EntityManagerFactory:
+			<util:properties id="hibernateProperties">
+				<prop key="#{T(org.hibernate.cfg.AvailableSettings).ENABLE_LAZY_LOAD_NO_TRANS}">true</prop>
+				<prop key="#{T(org.hibernate.cfg.AvailableSettings).SHOW_SQL}">true</prop>
+			</util:properties>
+	3.EntityManagerFactory:
+			<bean id="emf" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+				<property name="dataSource" ref="dataSource"/>
+				<property name="packagesToScan" value="hibernate.jpa"/>
+				<property name="jpaVendorAdapter">
+					<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter"/>
+				</property>
+				<property name="jpaProperties" ref="hibernateProperties"/>
+			</bean>
+	4.TransactionManager:
+				<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+					<property name="entityManagerFactory" ref="emf"/>
+				</bean>
+	5.Other:
+				<context:annotation-config/>
+				<context:component-scan base-package="hibernate.jpa"/>
+				<tx:annotation-driven/>
+				<context:property-placeholder location="classpath:hibernate.jpa/dataSource.properties"/>
+				
+Using:
+    @PersistenceContext
+    private EntityManager em;
+	
+	named query:
+        em.createNamedQuery("Contact.findAll", Contact.class).getResultList();
+		
+	named query with mapper class:
+		1. Create mapper class:	hibernate.jpa.entity.ContactSummary
+		em.createQuery("select new hibernate.jpa.entity.ContactSummary(c.firstName, c.lastName, t.telNumber) 
+			from Contact c left join c.contactTelDetails t", ContactSummary.class).getResultList();
+
+    named query with parameters:
+        em.createNamedQuery("Contact.findById", Contact.class).setParameter("id", id).getSingleResult();
+    
+	save/update:
+        if(contact.getId() == null){
+            em.persist(contact);
+        }else{
+            em.merge(contact);
+        }
+
+    delete:
+        Contact mergedContact = em.merge(contact);
+        em.remove(mergedContact);
+	
+	native query:
+		em.createNativeQuery("select * from contact", Contact.class).getResultList();
+
+Result set mappings:
+	Under class add annotation:
+		@SqlResultSetMappings({
+			@SqlResultSetMapping(
+					name = "contactResult",
+					entities = @EntityResult(entityClass = Contact.class)
+			),
+			@SqlResultSetMapping(
+					name = "contactSummaryResult",
+					classes = {
+							@ConstructorResult(
+									targetClass = ContactSummary.class,
+									columns = {
+											@ColumnResult(name = "firstName"),
+											@ColumnResult(name = "lastName"),
+											@ColumnResult(name = "telNumber")
+									}
+							)
+					}
+			)
+		})
+	
+    return em.createNativeQuery("select c.first_name as firstName, c.last_name as lastName, 
+	t.tel_number as telNumber from contact c JOIN contact_tel_detail t on c.id = t.contact_id", 
+	"contactSummaryResult").getResultList();
+	
+Transaction
+	interface TransactionDefinition			contains some transaction properties
+	interface TransactionStatus				manages transaction
+	
+
+
+ 
+    
+

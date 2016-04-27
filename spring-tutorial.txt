@@ -1,0 +1,448 @@
+IoC:
+	dependency pull(data found in regestry):	ApplicationContext
+	contextualized dependency lookup:			1. interface ManagedComponent
+														performLookup(Container)
+												2. interface Container
+														Object getDependency(String key)
+												3. SomeComponent implements ManagedComponent
+													@Override
+													performLookup(Container container)
+														container.getDependency
+	constructor DI								public SomeComponent(Dependency d)
+													this.d = d;
+	setter DI									setD(Dependency d)
+													this.d = d;
+	
+What IoC to use? 	Answer: DI(constructor or setter)
+					Внедрение зависимостей через метод установки позволяет менять
+					местами зависимости, не создавая новые объекты, и также разрешает классу вы­
+					бирать подходящие стандартные настройки без необходимости в явном внедрении
+					объекта. Внедрение через конструктор будет удачным выбором, когда нужно гаран­
+					тировать передачу зависимостей компоненту, и в случае проектирования для неиз­
+					меняемых объектов. Имейте в виду, что в то время как внедрение через конструктор
+					гарантирует предоставление компоненту всех зависимостей, большинство контейне­
+					ров предлагают также механизм мя обеспечения этого, но ценой может стать при­
+					вязка вашего кода к инфраструктуре.	
+
+Container concepts:	
+	Contaiiner implements interface BeanFactory, BeanDefinitionReader
+	DefaultListableBeanFactory one of container realizations
+	Bean implements BeanDefinition(Bean configuration)
+	PropertiesBeanDefinitionReader reads bean configuration from *.properties
+	XmlBeanDefinitionReader reads bean configuration from *.xml
+	
+	Create container:
+		DefaultListableBeanFactory factory = new DefaultListableBeanFactory();
+        XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(factory);
+        reader.loadBeanDefinitions("classpath:spring/core/custom-bean-factory.xml");
+        SimpleBean bean = factory.getBean(SimpleBean.class);
+	
+	Main container 	extension: 		ApplicationContext
+					realizations:	ClassPathXmlApplicationContext
+									GenericXmlApplicationContext
+									
+	How to register bean:			1.In configuration add (inside <beans></beans>)
+									<bean id="simpleBean" class="spring.core.SimpleBean">
+										<property name="name"  value="I am a simple bean"/>
+									</bean>
+									<bean id="setterDIBean" class="spring.core.SetterDIBean"
+										p:simpleBean-ref="simpleBean"/>
+									<bean id="ConstructorDIBean" class="spring.core.ConstructorDIBean"
+										  c:simpleBean-ref="simpleBean"/>
+									<bean id="constructorDIBeanWithMessage" class="spring.core.ConstructorDIBeanWithMessage"
+										  c:_0="I am ConstructorDIBeanWithMessage"/>
+									<bean id="constructorDIBeanWith2Messages" class="spring.core.ConstructorDIBeanWithMessage"
+										  c:_0="message 1"
+										  c:_1="message 2"/>
+									2. Add class annotation:	@Component
+																@Repository
+																@Service
+																@Controller
+																@RestController
+																+ add @Autowired under injected field, method or constructor
+																(can also use @Resource (or @Inject) instead @Autowired)
+	How to inject simple type values:	
+		XML:			properties or constructor
+						<bean...
+							<constructor-arg>
+								<value> </value>
+							</constructor-arg>
+						</bean>
+						with c-namespace:
+						<bean id="ConstructorDIBean" class="spring.core.ConstructorDIBean"
+							c:simpleBean-ref="simpleBean"/>
+							
+						<bean id="simpleBean" class="spring.core.SimpleBean">
+							<property name="name"  value="I am a simple bean"/>
+						</bean>
+						<bean id="setterDIBean" class="spring.core.SetterDIBean"
+							p:simpleBean-ref="simpleBean"/>
+		JavaConfig:		@Value under setters or fields
+		+ SpEL:			when inject values can ref to someBeanName.field:
+								@Component("constants")
+								public class SomeConstantsFor_InjectValuesBySpELBean {
+									private int _intVal=1;
+									+ getter (or make _intVal public)
+								...
+								@Component
+								public class InjectValuesBySpELBean {
+									@Value("#{constants._intVal}")
+									private int intVal;
+		How to inject composed types:
+			<property name="oracle">
+				<ref local ="oracle"/>
+			</property>
+			Применение атрибута local означает, что дескриптор <ref> всегда просматривает только иден­
+			тификатор бина и никогда не принимает во внимание его псевдонимы. Более того,
+			определение бина должно существовать в том же самом ХМL-файле конфигурации.
+			Чтобы внедрить бин по любому имени или импортировать бин из другого ХМL-
+			файла конфигурации, вместо атрибута local в дескрипторе <ref> необходимо
+			применять атрибут bean:
+			<property name="oracle">
+				<ref bean="wiseworm"/>	//injecting either by bean id or bean name
+			</property>
+			
+		How to inject collections:
+			1. Xml-based configuration:
+				public class CollectionsInject {
+					private List myList;
+					private Set mySet;
+					private Map<String, Object> myMap;
+					private Properties myProps;
+				
+				   <bean id="collectionsInjectBean" class="spring.core.CollectionsInject">
+						<property name="myList">
+							<list>
+								<value>from list 1</value>
+								<value>from list 2</value>
+							</list>
+						</property>
+						<property name="myMap">
+							<map>
+								<entry key="key_0">
+									<value>val_0</value>
+								</entry>
+							</map>
+						</property>
+						<property name="myProps">
+							<props>
+								<prop key="prop_key_0">prop_val_0</prop>
+								<prop key="prop_key_01">prop_val_1</prop>
+							</props>
+						</property>
+						<property name="mySet">
+							<set>
+								<value>set_val_0</value>
+								<ref bean="simpleBean"/>
+							</set>
+						</property>
+					</bean>
+			2. Using annotations:
+				in xml:
+				add xmlns:util ="http://www.springframework.org/schema/util"
+				<context:annotation-config/>
+				<context:component-scan...
+				<util:map id="annotatedMap" class="java.util.HashMap">
+					<entry ...
+					<entry ...
+				<util:set ...
+				<util:properties ...
+				<util:list ...
+				
+				@Service
+				public class CollectionsInject {
+					@Resource(name="annotatedMap")
+					private Map<String, Object> myMap;
+					...
+					
+Combining ApplicationContexts:
+			При вложении ApplicationContext платформа Spring позволяет би­
+		нам из контекста, который считается дочерним, ссылаться на бины в ро­
+		дительском контексте. 
+		GenericXmlApplicationContext childOfFactory2 = new GenericXmlApplicationContext();
+        childOfFactory2.load("classpath:spring/core/childAppContext.xml");//child context
+        childOfFactory2.setParent(factory2);//parent BeanFactory
+        childOfFactory2.refresh();
+        SimpleBeanFromChildAppContext simpleBeanFromChildAppContext = childOfFactory2.getBean(SimpleBeanFromChildAppContext.class);
+        SimpleBean simpleBeanFromChild = childOfFactory2.getBean(SimpleBean.class);
+		
+		Example with all cases:
+			Parent context:
+				id="beanA"
+				id="beanB"
+			Child context:
+				id="target1"
+					p:val-ref="beanA"			//points to parent:beanA (child does not have "beanA")
+					//can not do:
+						<property name="oracle">
+							<ref local ="oracle"/>
+						</property>
+				id="target2"			
+					p:val-ref="beanB"			//points to child:beanB
+				id="target3"
+					<property name="val">
+						<ref parent="beanB">	//points to parent:beanB
+					</property>
+				id="beanB"
+
+Another injection type: 
+	1.Lookup injection 
+		If singleton has prototype, then each time we extract singleton container must return new prototype.
+		
+		Suppose, we have MyHelper class with void operation() and interface DemoBean: getMyHelper(), someOperation()
+		xml:     <bean id="helper" class="spring.core.lookupmethodinjection.MyHelper" scope="prototype"/>
+
+		Standard case:
+			StandardBean implements DemoBean
+			xml:	<bean id="standardLookup" class="spring.core.lookupmethodinjection.StandardLookup">
+						<property name="myHelper">
+							<ref bean="helper"/>
+						</property>
+					</bean>
+		Lookup injection(LUI):
+			abstract LUI implements DemoBean
+				abstract MyHelper getMyHelper();
+				...and  here implements someOperation()
+			xml:     <bean id="abstractLookup" class="spring.core.lookupmethodinjection.AbstractLookup">
+						<lookup-method name="getMyHelper" bean="helper"/>
+					</bean>
+		Then if extract from container 2 LUI and compare MyHelpers, thy will be not same,
+		but the same for StandardBean will give 2 same beans.
+	
+	2. Method replacement:
+		There is bean:
+			public class StandardTarget {
+				public String someOperation(String msg){
+					return "Standard " + msg;
+				}
+			}
+		In runtime we want to replace method someOperation with another one.
+		1. Create class implements MethodReplacer:
+			public class FromatMethoodReplacement implements MethodReplacer {
+				public Object reimplement(Object obj, Method method, Object[] args) throws Throwable {
+					String msg = (String) args[0];
+					return "Replaced " + msg;
+				}
+			}
+		2. Register:
+			<bean id="standardTarget" class="spring.core.method_replacement.StandardTarget"/>
+			<bean id="replacementTarget" class="spring.core.method_replacement.StandardTarget">
+				<replaced-method name="someOperation" replacer="replacer">
+					<arg-type>String</arg-type>
+				</replaced-method>
+			</bean>
+			<bean id="replacer" class="spring.core.method_replacement.FromatMethoodReplacement"/>
+		3. After using bean with id replacementTarget someOperation will be replaced with return "Replaced " + msg
+		
+Bean naming strategy:
+		Если в дескрипторе <bean> предусмотрен атрибут id, его значение применяет­
+	ся в качестве имени. Коrда атрибут id не указан, Spring ищет атрибут name, и если
+	он определен, то используется первое имя, заданное в атрибуте name. (Мы говорим
+	первое имя, потому что в атрибуте name допускается определять множество имен;
+	этот момент вскоре будет раскрыт более подробно.) Если не указан ни атрибут id,
+	ни атрибут name, в качестве имени платформа Spring применяет имя класса бина,
+	разумеется, при условии, что другие бины не используют то же самое имя класса.
+	В случае если множество бинов с отсутствующими атрибутами id и name имеют одно
+	и то же имя класса, Spring сгенерирует исключение (типа org. springframework.
+	beans. factory. NoSuchBeanDefinitionException) при внедрении во время
+	инициализации ApplicationContext.
+	
+	Example:
+	<bean id="namel" name="name2 name3,name4;name5" class="java.lang.String"/>
+		<alias name="namel" alias="name6"/>
+	to get bean aliases: ApplicationContext.getAliases (bean name)
+	
+Scopes:
+	• Одиночный экземмяр. Стандартная область действия. Будет создаваться толь­
+		ко один объект на контейнер Spring loC.
+	• Прототип. Платформа Spring будет создавать новый экземпляр, когда он за­
+		прашивается приложением.
+	• Запрос. Для применения в неб-приложениях. Когда дл построения неб-при­
+		ложений используется Spring МVС, бины с областью действия на уровне за­
+		проса будут создаватьсямя каждого НТТР-запроса и уничтожаться по завер­
+		шении его обработки.
+	• Сеанс. Для применения в веб-приложениях. Когда для построения веб-прило­
+		жений используется Spring MVC бины с областью действия на уровне сеанса
+		будут создаваться мя каждого НТТР-сеанса и уничтожатьсяпосле его завер­
+		шения.
+	• Глобальный сеанс. Для использования в веб-приложениях, основанных на
+		портлетах. Бины с областью действияна уровне глобального сеанса могут сов­
+		местно применяться всеми портлетами внутри портального приложения Spring
+		MVC.
+	• Поток. Платформа Spriлg будет создавать новый экземпляр бина, когда он за­
+		прашивается новым потоком, и возвращать один тот же экземпляр бина при
+		поступлении запроса из того же самого потока. Обратите внимание, что по
+		умолчанию эта область действия не зарегистрирована.
+	• Специальная. Специальная область действия бина, которую можно создать за
+		счет реализации интерфейса org. springframework.beans. fac tory. config.
+		Scope и регистрации области действия в конфигурации Spring (мя стиля
+		ХМL используйте класс org. springframework.beans . factory. config.
+		CustomScopeConfigurer).
+
+Controlling bean creation:
+	<bean id="beanA" class ="com.apress.prospring4.ch3.BeanA" depends-on="beanB"/>
+	<bean id="beanB" class ="com.apress.prospring4.ch3.BeanB"/>
+	В этой конфигурации мы утверждаем, что бин по имени beanA зависит от бина
+	под названием beanB. При создании экземпляров бинов платформа Spring при­
+	мет это во внимание и обеспечит создание экземпляра Ьеаnв раньше экземпляра
+	beanA.
+
+Autowiring:
+	Платформа Spring поддерживает следующие режимы автосвязывания: byName,
+	byТуре, constructor, default и no (автосвязывание отключено; устанавливает­
+	ся по умолчанию). Когд применяется автосвязывание byName, платформа Spring
+	пытается связать каждое свойство с бином, имеющим такое же имя. Таким образом,
+	если целевой бин имеет свойство по имени foo и в ApplicationContext опреде­
+	лен бин foo, то этот бин foo назначается свойству foo целевого бина.
+	При использовании автосвязывания bуТуре платформа Spring пытается связать
+	каждое свойство целевого бина с бином того же самого типа в ApplicationContext.
+	Это значит, что если в целевом бине присутствует свойство типа String и в
+	ApplicationContext определен некоторый бин типа String, то Spring свяжет бин
+	String со свойством String целевого бина. Если в ApplicationContext опреде­
+	лено более одного бина типа String, то Sprig не сможет решить, какой из них вы­
+	брать дл автосвязывания, и сгенерирует исключение (типа org. springframework.
+	beans. factory. NoSuchBeanDefinitionException).
+	Режим автосвязывания constructor функционирует подобно режиму bуТуре
+	за исключением того, что для выполнения внедрения он применяет конструкторы,
+	а не методы установки. Платформа Spring пытается найти соответствие с как мож­
+	но большим числом аргументов в конструкторе. Таким образом, если бин имеет два
+	конструктора, первый из которых принимает аргумент String, а второй - аргу­
+	менты String и Integer, и при этом в ApplicationContext определены бины
+	String и Integer, Spring будет использовать конструктор с двумя аргументами.
+	В режиме default платформа Spring будет автоматически производить выбор
+	между режимами constructor и bуТуре. Если бин имеет стандартный конструк­
+	тор (без аргументов), то Spring применяет режим bуТуре, а в противном случае -
+	режим constructor.
+
+BEAN CALLBACK
+We can call some function on beans before initialization and after destroying.
+xml: 			in bean declaration <bean ... init-method="some_name_1", destroy-method="some_name_2" />
+java-config: 	@Bean(init-method="some_name_1", destroy-method="some_name_2")
+				when declaring bean add public methods some_name_1, some_name_2
+xml/java: 		if in xml we use <context:annotation-config/>, then do not need set init-method, destroy-method, in bean declaration
+				add @PreDestroy, @PostInit annotations under init and destroy methods
+	can be called all together in next order:
+		1. postconstruct
+		2. afterPropertiesSet
+		3. init
+	destroy: the same (beans will be destroyed when ApplicationContext::destroy (where getDefaultListableBanFactory::destroySingletones()))
+	if using servlets, can be destroyed when servlet::destroy. For another way the best practice is:
+	ApplicationContext ctx = ...
+	ctx.registerShutdownHook();
+	
+interface Aware:
+	BeanNameAware	
+		setBeanName(String name)	bean can be aware about it`s name in container
+									Платформа Spring вызывает метод setBeanName () после завершения конфигурирования бина, 
+									но перед любыми обратными вызовами жизненного цикла (инициализации или уничто­
+									жения)
+	ApplicationContextAware
+		setApplicatonContext(ApplicationContext context)
+
+FactoryBean<T>:		creates another beans
+	Example:
+		public class MessageDigestFactoryBean implements InitializingBean, FactoryBean<MessageDigest> {
+			private MessageDigest messageDigest;
+			private String algorithmName = "MD5";
+			@Override
+			public MessageDigest getObject() throws Exception {return messageDigest;}
+			@Override
+			public Class<?> getObjectType() {return MessageDigest.class;}
+			@Override
+			public boolean isSingleton() {return true;}
+			@Override
+			public void afterPropertiesSet() throws Exception {messageDigest = MessageDigest.getInstance(algorithmName);}
+			public void setAlgorithmName(String algorithmName) {this.algorithmName = algorithmName;}
+		}
+		xml:
+			<bean id="shaDigest" class="spring.core.bean_initialization.MessageDigestFactoryBean"
+					p:algorithmName="SHA1"/>
+			<bean id="defaultDigest" class="spring.core.bean_initialization.MessageDigestFactoryBean"/>
+	if in ApplicationContext.getBean use "&bean_name" we can obtain FactoryBean:
+			MessageDigestFactoryBean bean = ctx.getBean("&shaDigest");
+
+Factory-bean, factory-method:
+		Иногда нужно создавать экземпляры компонентов JavaBean, которые были пре­
+	доставлены приложением третьей стороны, не поддерживающим Spring. Вы не зна­
+	ете, как создавать экземпляр этого класса, но вам известно, что приложение третьей
+	стороны предлагает класс, который можно использовать для получения экземпля­
+	ра JavaBean, необходимого вашему приложению Spring. 
+	 how to do:
+		1. Create factory
+		2. Declare method where return needed bean:
+			public BeanA getInstance(){
+				return new BeanA();
+			}
+		3. In xml:
+			<bean id="beanA" factory-bean="path_to_Factory_class" factory-method="getInstance"/>
+			
+PropertyEditors:
+	default: in Spring there are 13:
+		byte [] bytes;
+		Class cls;
+		Boolean trueOrFalse;
+		List<String> stringList;
+		Date date;
+		Float floatValue;
+		File file;
+		InputStream stream;
+		Locale locale;
+		Pattern pattern;
+		Properties properties;
+		String trimString;
+		URL url;
+	
+	create custom configurer:
+		1. Declare class implemented PropertyEditorRegistrar:
+			public class CustomPropertyEditor implements PropertyEditorRegistrar{
+				@Override
+				public void registerCustomEditors(PropertyEditorRegistry registry) {
+					SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyyy");
+					registry.registerCustomEditor(Date.class,  new CustomDateEditor(format, true));
+																ByteArrayPropertyEditor
+																ClassEditor
+																CustomВooleanEditor
+																CustomCollectionEditor
+																CustomNumЬerEditor
+																FileEditor
+																InputStreamEditor
+																LocaleEditor
+																Pattern
+																PropertiesEditor
+																URLEditor
+					registry.registerCustomEditor(String.class, new StringTrimmerEditor(true));
+				}
+			}
+		2. in xml:
+			<bean id="customEditorConfigurer" class="org.springframework.beans.factory.config.CustomEditorConfigurer"
+				  p:propertyEditorRegistrars-ref="list"/>
+			<util:list id="list">
+				<bean id="customEditorBean" class="spring.core.bean_initialization.CustomPropertyEditor"/>
+			</util:list>
+			
+	another way:
+		Example:
+			class UserName
+				String f_name, l_name;
+				UserName(f_name, l_name){...}
+				
+			public class CustomUserNameEditor extends PropertyEditorSupport {
+			@Override
+			public void setAsText(String text) throws IllegalArgumentException {
+				String[] args = text.split("\\s");
+				super.setValue(new UserName(args[0], args[1]));
+
+			xml:	register custom class:
+							<bean id="customEditorConfigurer" 
+								class="org.springframework.beans.factory.config.CustomEditorConfigurer"
+								p:customEditors-ref="customMap"/>
+							<util:map id="customMap">
+								<entry key="spring.core.bean_initialization.UserName"
+									   value="spring.core.bean_initialization.CustomUserNameEditor"/>
+							</util:map>
+			now, we can create class with property UserName and in give some value, for example: "Igor Dumchykov"
+			then, Spring will convert it to UserName using declared before CustomUserNameEditor:
+			<bean id="nameSurname" class="spring.core.bean_initialization.CustomEditorExample"
+				p:name="Igor Dumchykov"/>
+    
+	

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:p="http://www.springframework.org/schema/p" xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+    <context:annotation-config/>
+    <context:component-scan base-package="spring.core.bean_initialization"/>
+
+    <!--<bean id="one_1" class="spring.core.bean_initialization.BeanOne"-->
+          <!--init-method="init"-->
+            <!--p:name="Chris" p:age="10"/>-->
+    <!--<bean id="one_2" class="spring.core.bean_initialization.BeanOne"-->
+          <!--init-method="init"-->
+          <!--p:age="32"/>-->
+    <!--<bean id="one_3" class="spring.core.bean_initialization.BeanOne"-->
+          <!--init-method="init"-->
+          <!--p:name="Chris" />-->
+
+    <!--#####################################################################################-->
+    <bean id="shaDigest" class="spring.core.bean_initialization.MessageDigestFactoryBean"
+          p:algorithmName="SHA1"/>
+    <bean id="defaultDigest" class="spring.core.bean_initialization.MessageDigestFactoryBean"/>
+    <bean id="digestFactory" class="spring.core.bean_initialization.MessageDigestFactoryBean"/>
+
+    <bean id="MD2Digest" factory-bean="defaultDigestFactory" factory-method="getInstance"/>
+    <bean id="defaultDigestFactory" class="spring.core.bean_initialization.MessageDigestFactory"/>
+    <!--#####################################################################################-->
+    <bean id="customEditorConfigurer" class="org.springframework.beans.factory.config.CustomEditorConfigurer"
+          p:propertyEditorRegistrars-ref="list"
+        p:customEditors-ref="map"/>
+    <util:list id="list">
+        <bean id="customEditorBean" class="spring.core.bean_initialization.PropertyEditorBean$CustomPropertyEditor"/>
+    </util:list>
+    <bean id="customBeanBundle" class="spring.core.bean_initialization.PropertyEditorBean"
+          p:bytes="Hello, World!"
+          p:cls="java.lang.String"
+          p:date="05/03/13"
+          p:floatValue="1.0f"
+          p:locale="en_US"
+          p:pattern="a*b"
+          p:properties="name=Igor age=27"
+          p:trimString="    Trim me "
+          p:url="http://www.vk.com"
+          p:stringList-ref="list2"
+          />
+
+    <util:list id="list2">
+        <value>string_1</value>
+        <value>string_2</value>
+    </util:list>
+    <util:map id="map">
+        <entry key="spring.core.bean_initialization.UserName"
+               value="spring.core.bean_initialization.CustomUserNameEditor"/>
+    </util:map>
+    <bean id="nameSurname" class="spring.core.bean_initialization.CustomEditorExample"
+          p:name="Igor Dumchykov"/>
+</beans>
