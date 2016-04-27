@@ -156,7 +156,7 @@ Container concepts:
 					...
 					
 Combining ApplicationContexts:
-			При вложении ApplicationContext платформа Spring позволяет би­
+		При вложении ApplicationContext платформа Spring позволяет би­
 		нам из контекста, который считается дочерним, ссылаться на бины в ро­
 		дительском контексте. 
 		GenericXmlApplicationContext childOfFactory2 = new GenericXmlApplicationContext();
@@ -235,7 +235,7 @@ Another injection type:
 		3. After using bean with id replacementTarget someOperation will be replaced with return "Replaced " + msg
 		
 Bean naming strategy:
-		Если в дескрипторе <bean> предусмотрен атрибут id, его значение применяет­
+	Если в дескрипторе <bean> предусмотрен атрибут id, его значение применяет­
 	ся в качестве имени. Коrда атрибут id не указан, Spring ищет атрибут name, и если
 	он определен, то используется первое имя, заданное в атрибуте name. (Мы говорим
 	первое имя, потому что в атрибуте name допускается определять множество имен;
@@ -362,7 +362,7 @@ FactoryBean<T>:		creates another beans
 			MessageDigestFactoryBean bean = ctx.getBean("&shaDigest");
 
 Factory-bean, factory-method:
-		Иногда нужно создавать экземпляры компонентов JavaBean, которые были пре­
+	Иногда нужно создавать экземпляры компонентов JavaBean, которые были пре­
 	доставлены приложением третьей стороны, не поддерживающим Spring. Вы не зна­
 	ете, как создавать экземпляр этого класса, но вам известно, что приложение третьей
 	стороны предлагает класс, который можно использовать для получения экземпля­
@@ -444,5 +444,109 @@ PropertyEditors:
 			then, Spring will convert it to UserName using declared before CustomUserNameEditor:
 			<bean id="nameSurname" class="spring.core.bean_initialization.CustomEditorExample"
 				p:name="Igor Dumchykov"/>
-    
+
+Internationalization:
+	1. Create name_locale.properties for each language
+	2.  xml:
+		<util:list id="list">
+			<value>spring.core.internationalization.name</value>
+		</util:list>
+		<bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource"
+			  p:basenames-ref="list"/>
+	3. in app:
+		String en = ctx.getMessage("arg1", null, Locale.ENGLISH);
+        Locale RU = new Locale("ru", "RU");
+        String ru = ctx.getMessage("arg1", null, RU);
+
+Event listener:
+	Events can be handled by ApplicationListener<T> interface, where T extends ApplicationEvent
+	After that this bean, that implements ApplicationListener, can be created in ApplicationContextAware bean
+	by using ctx.publishEvent(create_listener)
+	Example:
+		class MessageEvent extends ApplicationEvent
+			public MessageEvent(Object source, String message) {
+				super(source);//source is a bean, where event occured (see below)
+				this.message = message;//our message (can be anything, in our case is String)
+			}
+		@Component
+		public class MessageEventListener implements ApplicationListener<MessageEvent> {
+			@Override
+			public void onApplicationEvent(MessageEvent event) {
+				System.out.println("Received message: " + event.getMessage());//handle event here by printing message above
+			}
+		}
+		class PublisherBean extends ApplicationContextAware
+			public void publish(String message){
+				context.publishEvent(new MessageEvent(this, message));
+			}
+		
+		in main:
+			Publisher bean = context.getBean(Publisher.class);
+			bean.publish("Hello");
+
+Resources:
+	implements:	org.springframework.core.io.Resource
+	loaded by:	ResourceLoader
+	ApplicationContext extends ResourceLoader
 	
+	Example:
+		ApplicationContext context = new ClassPathXmlApplicationContext("spring/core/beanFactoryConfiguration.xml");
+        Resource resource = context.getResource("https://www.ya.ru");
+        System.out.println(resource.getURL().getContent());
+
+JAVA CONFIGURATION:
+
+	@Configuration
+	@ImportResource(value = "classpath:spring/core/java_configuration/appContext.xml")
+	@PropertySource(value = "classpath:spring/core/java_configuration/message.properties")
+	@ComponentScan(basePackages = {"spring.core.java_configuration"})
+	@Import(AnotherConfiguration.class)
+	public class _Configuration {
+		@Autowired
+		private Environment env;	уровень абстракции, предназначенный дл инкапсуляции 
+									среды выполняющегося приложения Spring. В рамках этой 
+									абстракuии все свойства системы, переменные среды и 
+									свойства приложения обслуживаются интерфейсом Environmnt,
+									который Spring наполняет во время начальной загрузки 
+									ApplicationContext
+
+		@Bean(name = "arg1Bean")
+		public SimpleBean simpleBean(){
+			SimpleBean bean = new SimpleBean();
+			bean.setName(env.getProperty("arg1"));
+			return bean;
+		}
+		@Bean
+		public SetterDIBean setterDIBean(){
+			SetterDIBean bean = new SetterDIBean();
+			bean.setSimpleBean(simpleBean());
+			return bean;
+		}
+    
+Profiles:
+	There can be many separate spring configurations. Each configuration defined in separate profile:
+		<?xml version="1.0" encoding="UTF-8"?>
+		<beans xmlns="http://www.springframework.org/schema/beans"
+		   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd"
+		   //here profile can be defined as:
+		   profile="profile_name"
+		   >
+
+	</beans>
+	
+Groovy configuration:
+	1. add dependency:
+		<groupId>org.codehaus.groovy</groupId>
+        <artifactId>groovy-all</artifactId>
+	2. create groovy configuration file appConfig.groovy:
+		package spring.core.groovy_config
+
+		package spring.core.groovy_config
+		import spring.core.SimpleBean
+
+		beans{
+			simpleBean(SimpleBean, name:'Default groovy name')
+		}
+	3. in main:
+		ApplicationContext ctx = new GenericGroovyApplicationContext("spring/core/groovy_config/appConfig.groovy");
