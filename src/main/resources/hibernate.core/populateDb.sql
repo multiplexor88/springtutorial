@@ -10,6 +10,7 @@ insert into contact_tel_detail (contact_id, tel_type, tel_number)
 values (1, 'Home', '1234567890');
 insert into contact_tel_detail (contact_id, tel_type, tel_number)
 values (2, 'Home', '1234567890');
+
 insert into hobby (hobby_id) values ('Swimming') ;
 insert into hobby (hobby_id) values ('Jogging');
 insert into hobby (hobby_id) values ('Programming');
@@ -19,14 +20,15 @@ insert into contact_hobby_detail(contact_id, hobby_id) values (1, 'Swimming');
 insert into contact_hobby_detail(contact_id, hobby_id) values (1, 'Movies');
 insert into contact_hobby_detail(contact_id, hobby_id) values (2, 'Swimming');
 
-TRUNCATE table contact;
-TRUNCATE table contact_tel_detail;
-TRUNCATE table hobby;
-TRUNCATE table contact_hobby_detail;
+-- TRUNCATE table contact;
+-- TRUNCATE table contact_tel_detail;
+-- TRUNCATE table hobby;
+-- TRUNCATE table contact_hobby_detail;
 
-drop table contact;
-drop table contact_tel_detail;
-drop table hobby;
-drop table contact_hobby_detail;
+-- drop table contact;
+-- drop table contact_tel_detail;
+-- drop table hobby;
+-- drop table contact_hobby_detail;
 
 select * from contact_tel_detail;
+select * from contact;
