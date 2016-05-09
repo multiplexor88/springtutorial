@@ -34,20 +34,20 @@ public class main {
 //        contactDao.findAllWithDetail().stream().forEach(System.out::println);
 //        System.out.println(contactDao.findById(10L));
 
-//        Contact contact = new Contact();
-//        contact.setBirthDate(new Date());
-//        contact.setFirstName("Michael");
-//        contact.setLastName("Jackson");
+        Contact contact = new Contact();
+        contact.setBirthDate(new Date());
+        contact.setFirstName("Michael");
+        contact.setLastName("Jackson");
 //
 //        ContactTelDetail detail = new ContactTelDetail("Mobile", "22222");
 //        detail.setContact(contact);
 //        contact.getContactTelDetails().add(detail);
 //
-//        contactDao.save(contact);
+        contactDao.save(contact);
 
 //        contactDao.delete(contactDao.findById(11L));
 
-        contactDao.findAllWithDetail().stream().forEach(System.out::println);
+//        contactDao.findAllWithDetail().stream().forEach(System.out::println);
 
     }
 }

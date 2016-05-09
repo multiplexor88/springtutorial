@@ -31,4 +31,4 @@ insert into contact_hobby_detail(contact_id, hobby_id) values (2, 'Swimming');
 -- drop table contact_hobby_detail;
 
 select * from contact_tel_detail;
-select * from contact;
+select * from contact WHERE id = 1;

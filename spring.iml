@@ -14,6 +14,7 @@
           <file>file://$MODULE_DIR$/src/main/resources/spring/core/bean_initialization/appContext.xml</file>
           <file>file://$MODULE_DIR$/src/main/resources/spring/core/internationalization/appContext.xml</file>
           <file>file://$MODULE_DIR$/src/main/resources/spring/core/lookupmethodinjection/appContext.xml</file>
+          <file>file://$MODULE_DIR$/src/main/resources/mapping/db-config.xml</file>
         </fileset>
       </configuration>
     </facet>
@@ -38,7 +39,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.18" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: org.slf4j:jcl-over-slf4j:1.7.18" level="project" />
@@ -88,14 +89,15 @@
     <orderEntry type="library" name="Maven: org.hibernate:hibernate-java8:5.1.0.Final" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: javax.transaction:jta:1.1" level="project" />
     <orderEntry type="library" name="Maven: org.hibernate:hibernate-validator:5.2.4.Final" level="project" />
-    <orderEntry type="library" name="Maven: javax.validation:validation-api:1.1.0.Final" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml:classmate:1.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.hibernate:hibernate-ehcache:5.1.0.Final" level="project" />
     <orderEntry type="library" name="Maven: net.sf.ehcache:ehcache:2.10.1" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: javax.el:javax.el-api:2.2.5" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Maven: javax.el:javax.el-api:2.2.5" level="project" />
     <orderEntry type="library" name="Maven: org.testng:testng:6.9.10" level="project" />
     <orderEntry type="library" name="Maven: com.beust:jcommander:1.48" level="project" />
     <orderEntry type="library" name="Maven: org.beanshell:bsh:2.0b4" level="project" />
+    <orderEntry type="library" name="Maven: javax.validation:validation-api:1.1.0.Final" level="project" />
+    <orderEntry type="library" name="Maven: org.glassfish.web:javax.el:2.2.5" level="project" />
     <orderEntry type="library" name="Maven: org.postgresql:postgresql:9.4.1208" level="project" />
     <orderEntry type="library" name="Maven: org.apache.tomcat:tomcat-jdbc:7.0.57" level="project" />
     <orderEntry type="library" name="Maven: org.apache.tomcat:tomcat-juli:7.0.57" level="project" />

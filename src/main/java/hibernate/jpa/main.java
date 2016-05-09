@@ -42,7 +42,7 @@ public class main {
 
 //        contactDao.findAllContactSummaryByNativeQueryReturnResultMap().stream().forEach(System.out::println);
 
-        contactDao.findByCriteria("Michael", null).stream().forEach(System.out::println);
+//        contactDao.findByCriteria("Michael", null).stream().forEach(System.out::println);
 
     }
 }

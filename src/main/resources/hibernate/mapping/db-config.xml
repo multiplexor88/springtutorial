@@ -11,23 +11,20 @@
 
     <context:annotation-config/>
 
-    <context:component-scan base-package="hibernate.jpa"/>
+    <context:component-scan base-package="hibernate.mapping"/>
 
     <tx:annotation-driven/>
 
     <context:property-placeholder location="classpath:hibernate.jpa/dataSource.properties"/>
 
-    <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
-        <property name="entityManagerFactory" ref="emf"/>
+    <bean id="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory"/>
     </bean>
 
-    <bean id="emf" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+    <bean id="sessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
         <property name="dataSource" ref="dataSource"/>
-        <property name="packagesToScan" value="hibernate.jpa"/>
-        <property name="jpaVendorAdapter">
-            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter"/>
-        </property>
-        <property name="jpaProperties" ref="hibernateProperties"/>
+        <property name="packagesToScan" value="hibernate.mapping"/>
+        <property name="hibernateProperties" ref="hibernateProperties"/>
     </bean>
 
     <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
@@ -49,8 +46,5 @@
         <!--<prop key="#{T(org.hibernate.cfg.AvailableSettings).USE_QUERY_CACHE}">false</prop>-->
     </util:properties>
 
-    <jpa:repositories base-package="hibernate"
-                      entity-manager-factory-ref="emf"
-                      transaction-manager-ref="transactionManager"/>
 
 </beans>
