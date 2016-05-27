@@ -18,8 +18,8 @@ import java.util.Date;
 public class main {
     public static void main(String[] args) {
         ApplicationContext ctx = new ClassPathXmlApplicationContext("classpath:hibernate.core/db-config.xml");
-//        SessionFactory sessionFactory = (SessionFactory) ctx.getBean("sessionFactory");
-//        Session session = sessionFactory.openSession();
+        SessionFactory sessionFactory = (SessionFactory) ctx.getBean("sessionFactory");
+        Session session = sessionFactory.openSession();
 //        session.getTransaction().begin();
 //
 //        Hobby h = new Hobby();

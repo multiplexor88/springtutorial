@@ -40,7 +40,7 @@ public class WritingQuiries {
 //        criteria.select(i);
 //        em.createQuery(criteria).getResultList().forEach(System.out::println);
 
-        //Restrivtions
+        //Restrictions
         //1.
 //        em.createQuery("from Contact c where c.id = :id").setParameter("id", 1L).getResultList().forEach(System.out::println);
 //        -----------------------------------------------------------
@@ -62,9 +62,20 @@ public class WritingQuiries {
             cb.like
             cb.like(...).not()
          */
+        /*
+        with collections:
+        select c from Category c where size(c.items) > 1
+        Root<Category> c = criteria. from( Category. class);
+        criteria. select(c). where(
+             cb.gt(
+             cb.size(c.<Collection>get( "items" )),
+             1
+            )
+        );
+
         System.out.println(em.createQuery("from Contact where firstName = 'Scott'").getSingleResult());
 
-
+*/
     }
 
 }

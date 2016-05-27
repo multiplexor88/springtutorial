@@ -87,6 +87,74 @@ Associations:
 			inverseJoinColumns = @JoinColumn(name = "c_a_id"))
 			A[]
 			
+----------------------------------			
+			Another Example:
+----------------------------------	
+			Terminal
+				id
+				terminalVin
+				@OneToOne
+				@JoinColumn(name = "terminal_vin", referenceJoinColumnName = "vin", insertale = false, updateble = false)
+				TerminalCompany
+				
+			TerminalCompany
+				id
+				vin
+				companyId
+----------------------------------	
+			Terminal
+				id
+				terminalVin
+				@ManyToOne
+				@JoinColumn(name = "terminal_vin", referenceJoinColumnName = "vin")
+				TerminalCompany
+				
+			TerminalCompany
+				id
+				vin
+				companyId
+				
+			-------
+			or with join table (if @JoinColumn is not included, then mapped with left and right tables by PK)
+			-------
+			Terminal
+				id
+				terminalVin
+				@ManyToOne
+				@JoinTable(name = "terminal_company",
+					joinColumns = @JoinColumn(name = "terminal_id"),
+					inverseJoinColumns = @JoinColumn(name = "company_id"))
+				TerminalCompany
+				
+			TerminalCompany
+				id
+				vin
+				companyId
+				
+		PAY ATTENTION ON INSERTABLE, UPDATABLE. IF FALSE, THEN PROCESS TERMINAL AND TERMINAL_COMPANY SEPARATLY.
+		IT MEANS THAT IF WE INSERT NEW VALUE IN TERMINAL, WE PROCESS SEPARATLY TERMINAL_COMPANY WITH NEW VALUE.
+		IF DELETE FROM TERMINAL_COMPANY NOT BY ID, THEN:
+		session.createQuery("delete from TerminalCompany tc where tc.vin = 'vin3' and tc.companyId = '2'").executeUpdate();
+		NOT LIKE: session.delete(tc)!!!
+		
+		
+		CONCLUSION:
+		OneToOne		join column is FK in source(current) table 
+		OneToMany		join column is FK in target (another) table
+			mappedBy = "filedName_in_target_table"	
+			cascade = 	CascadeType.PERSIST 		when obtain filedName_in_target_table and want to save current item 
+													than we need firstly em.persist(this), and after that put this in 
+													filedName_in_target_table and persist. With this option when we put this to
+													filedName_in_target_table, this object can be saved automatically.
+						CascadeType.REMOVE 			if remove filedName_in_target_table - FK constraint violation
+													with this option - no
+		ManyToMany		using join table (join column is FK in join table, 
+						inverse join column is FK in join table)
+		
+----------------------------------
+		
+		
+			
 Work with SessionFactory:
 	ApplicationContext ctx = new ClassPathXmlApplicationContext("classpath:hibernate.core/db-config.xml");
 	SessionFactory sessionFactory = (SessionFactory) ctx.getBean("sessionFactory");
@@ -299,7 +367,17 @@ Creating quiries:
         em.createNamedQuery("findContacts");
         session.getNamedQuery("findContacts");
 
-
- 
+		
+@Column(name = "IMPERIALWEIGHT" )
+@org.hibernate.annotations. ColumnTransformer(
+ read = "IMPERIALWEIGHT / 2.20462" ,
+ write = "? * 2.20462"
+)
+protected double metricWeight;
+When reading a row from the ITEM table, Hibernate embeds the expression
+IMPERIALWEIGHT / 2.20462, so the calculation occurs in the database and Hibernate
+returns the metric value in the result to the application layer. For writing to the column, Hibernate sets the metric value on the mandatory, single placeholder (the question mark), and your SQL expression calculates the actual value to be inserted or
+updated.
+	
     
 
